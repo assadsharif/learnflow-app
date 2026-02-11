@@ -1,0 +1,15 @@
+apiVersion: v2
+name: learnflow
+description: AI-powered Python tutoring platform
+type: application
+version: 0.1.0
+appVersion: "0.1.0"
+dependencies:
+  - name: postgresql
+    version: "16.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
+  - name: kafka
+    version: "31.x.x"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: kafka.enabled

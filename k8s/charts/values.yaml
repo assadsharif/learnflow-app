@@ -1,0 +1,55 @@
+# LearnFlow Helm Chart Values
+
+replicaCount: 1
+
+backend:
+  image:
+    repository: learnflow-backend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: ClusterIP
+    port: 8000
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+frontend:
+  image:
+    repository: learnflow-frontend
+    tag: latest
+    pullPolicy: IfNotPresent
+  service:
+    type: NodePort
+    port: 3000
+    nodePort: 30300
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+
+# Subchart overrides
+postgresql:
+  enabled: false  # Use external postgres-k8s-setup skill
+kafka:
+  enabled: false  # Use external kafka-k8s-setup skill
+
+dapr:
+  enabled: true
+  pubsub:
+    type: pubsub.kafka
+    brokers: "kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092"
+  statestore:
+    type: state.postgresql
+    connectionString: "host=postgres-postgresql.postgres.svc.cluster.local user=learnflow password=learnflow port=5432 dbname=learnflow sslmode=disable"
+
+ingress:
+  enabled: true
+  host: learnflow.local

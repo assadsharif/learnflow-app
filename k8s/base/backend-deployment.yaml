@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnflow-backend
+  namespace: learnflow
+  labels:
+    app: learnflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: learnflow-backend
+  template:
+    metadata:
+      labels:
+        app: learnflow-backend
+      annotations:
+        dapr.io/enabled: "true"
+        dapr.io/app-id: "learnflow-backend"
+        dapr.io/app-port: "8000"
+        dapr.io/app-protocol: "http"
+    spec:
+      containers:
+        - name: backend
+          image: learnflow-backend:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: learnflow-secrets
+                  key: openai-api-key
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://learnflow:learnflow@postgres-postgresql.postgres.svc.cluster.local:5432/learnflow"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
