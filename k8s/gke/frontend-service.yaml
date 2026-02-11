@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: learnflow-frontend
+  namespace: learnflow
+  labels:
+    app: learnflow-frontend
+spec:
+  selector:
+    app: learnflow-frontend
+  ports:
+    - port: 80
+      targetPort: 3000
+      protocol: TCP
+  type: LoadBalancer

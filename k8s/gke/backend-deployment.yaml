@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: learnflow-backend
+  namespace: learnflow
+  labels:
+    app: learnflow-backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: learnflow-backend
+  template:
+    metadata:
+      labels:
+        app: learnflow-backend
+      annotations: {}
+    spec:
+      containers:
+        - name: backend
+          image: us-central1-docker.pkg.dev/gen-lang-client-0174245278/learnflow/backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: learnflow-secrets
+                  key: openai-api-key
+            - name: DATABASE_URL
+              value: "postgresql+asyncpg://learnflow:learnflow@postgres-postgresql.postgres.svc.cluster.local:5432/learnflow"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kafka.kafka.svc.cluster.local:9092"
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          livenessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /api/v1/health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
