@@ -14,16 +14,12 @@ spec:
     metadata:
       labels:
         app: learnflow-backend
-      annotations:
-        dapr.io/enabled: "true"
-        dapr.io/app-id: "learnflow-backend"
-        dapr.io/app-port: "8000"
-        dapr.io/app-protocol: "http"
+      annotations: {}
     spec:
       containers:
         - name: backend
           image: learnflow-backend:latest
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 8000
           env:
@@ -35,7 +31,7 @@ spec:
             - name: DATABASE_URL
               value: "postgresql+asyncpg://learnflow:learnflow@postgres-postgresql.postgres.svc.cluster.local:5432/learnflow"
             - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092"
+              value: "kafka.kafka.svc.cluster.local:9092"
           resources:
             requests:
               cpu: 100m
