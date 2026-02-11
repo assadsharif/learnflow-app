@@ -1,14 +1,14 @@
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'LearnFlow Docs',
-  tagline: 'AI-powered Python tutoring platform documentation',
+  title: 'Reusable Intelligence & Cloud-Native Mastery',
+  tagline: 'Portable AI agent skills with MCP Code Execution pattern',
   url: 'https://learnflow.dev',
   baseUrl: '/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
   organizationName: 'assadsharif',
-  projectName: 'learnflow-app',
+  projectName: 'Reusable-Intelligence-Cloud-Native-Mastery',
 
   presets: [
     [
@@ -31,19 +31,38 @@ const config = {
     /** @type {import('@docusaurus/preset-classic').ThemeConfig} */
     ({
       navbar: {
-        title: 'LearnFlow',
+        title: 'Reusable Intelligence',
         items: [
           { type: 'docSidebar', sidebarId: 'docs', position: 'left', label: 'Docs' },
-          { href: 'https://github.com/assadsharif/learnflow-app', label: 'GitHub', position: 'right' },
+          { href: 'https://github.com/assadsharif/Reusable-Intelligence-Cloud-Native-Mastery', label: 'Skills Library', position: 'right' },
+          { href: 'https://github.com/assadsharif/learnflow-app', label: 'LearnFlow App', position: 'right' },
         ],
       },
       footer: {
         style: 'dark',
-        copyright: `Built with Docusaurus. Powered by Reusable Intelligence Skills.`,
+        links: [
+          {
+            title: 'Documentation',
+            items: [
+              { label: 'Getting Started', to: '/' },
+              { label: 'Skills Guide', to: '/skills/what-are-skills' },
+              { label: 'Deployment', to: '/deployment/local-dev' },
+            ],
+          },
+          {
+            title: 'GitHub',
+            items: [
+              { label: 'Skills Library', href: 'https://github.com/assadsharif/Reusable-Intelligence-Cloud-Native-Mastery' },
+              { label: 'LearnFlow App', href: 'https://github.com/assadsharif/learnflow-app' },
+            ],
+          },
+        ],
+        copyright: `Hackathon III — Reusable Intelligence & Cloud-Native Mastery. Built with Docusaurus.`,
       },
       prism: {
         theme: require('prism-react-renderer').themes.github,
         darkTheme: require('prism-react-renderer').themes.dracula,
+        additionalLanguages: ['bash', 'yaml', 'docker', 'python'],
       },
     }),
 };

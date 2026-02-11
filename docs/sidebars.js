@@ -15,7 +15,7 @@ const sidebars = {
     {
       type: 'category',
       label: 'Deployment',
-      items: ['deployment/local-dev', 'deployment/kubernetes'],
+      items: ['deployment/local-dev', 'deployment/kubernetes', 'deployment/gcp-gke', 'deployment/cicd'],
     },
   ],
 };

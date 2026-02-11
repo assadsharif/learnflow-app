@@ -3,13 +3,34 @@ slug: /
 sidebar_position: 1
 ---
 
-# LearnFlow
+# Reusable Intelligence & Cloud-Native Mastery
 
-**AI-powered Python tutoring platform** built entirely using reusable AI agent Skills.
+**Portable AI agent skills with the MCP Code Execution pattern** — 95% context savings, cross-platform compatibility, cloud-native deployment.
 
-## What is LearnFlow?
+## The Innovation
 
-LearnFlow is an intelligent Python tutoring platform that uses a multi-agent architecture to provide personalized learning experiences. Six specialized AI agents collaborate to teach Python:
+Traditional AI agent tools bloat the context window with thousands of tokens per tool definition. Our **Skills + Code Execution** pattern keeps context lean:
+
+```
+SKILL.md (~100 tokens)  →  scripts/*.py (executed, 0 tokens)  →  minimal result
+```
+
+| Metric | Direct MCP Loading | Skills Pattern |
+|--------|-------------------|----------------|
+| Context per tool | ~2,500 tokens | ~100 tokens |
+| 22 MCP servers | ~50,000 tokens | ~2,200 tokens |
+| **Savings** | — | **95.6%** |
+
+## Two Repositories
+
+| Repository | Purpose | Link |
+|-----------|---------|------|
+| **Skills Library** | 54 reusable AI agent skills + 23 MCP servers | [GitHub](https://github.com/assadsharif/Reusable-Intelligence-Cloud-Native-Mastery) |
+| **LearnFlow App** | AI-powered Python tutoring platform (demo app) | [GitHub](https://github.com/assadsharif/learnflow-app) |
+
+## LearnFlow Demo
+
+LearnFlow is an intelligent Python tutoring platform built **entirely using reusable skills**. Six AI agents collaborate to teach Python:
 
 | Agent | Role |
 |-------|------|
@@ -20,25 +41,41 @@ LearnFlow is an intelligent Python tutoring platform that uses a multi-agent arc
 | **Exercise** | Generates tailored coding challenges |
 | **Progress** | Tracks learning progress and suggests next steps |
 
-## Built With Skills
+## Cloud-Native Stack
 
-LearnFlow demonstrates the **Skills + Code Execution** pattern — every component was deployed using reusable AI agent skills from the [skills library](https://github.com/assadsharif/Reusable-Intelligence-Cloud-Native-Mastery).
-
-```
-SKILL.md (~100 tokens) → scripts/*.py (executed, 0 tokens) → minimal result
-```
+| Layer | Technology |
+|-------|-----------|
+| Frontend | Next.js 14 + Monaco Editor |
+| Backend | FastAPI + OpenAI Agents SDK |
+| Messaging | Apache Kafka (KRaft mode) |
+| Database | PostgreSQL (Bitnami Helm) |
+| Service Mesh | Dapr (pub/sub + state) |
+| Orchestration | Kubernetes (Minikube + GKE) |
+| Packaging | Helm Charts |
+| Container Registry | Google Artifact Registry |
+| CI/CD | GitHub Actions |
 
 ## Quick Start
 
 ```bash
-# Clone the repository
-git clone https://github.com/assadsharif/learnflow-app.git
-cd learnflow-app
+# Clone the skills library
+git clone https://github.com/assadsharif/Reusable-Intelligence-Cloud-Native-Mastery.git
+cd Reusable-Intelligence-Cloud-Native-Mastery
 
-# Start backend
-cd backend && pip install -r requirements.txt
-uvicorn app.main:app --reload --port 8000
+# Set up environment
+python3 -m venv .venv && source .venv/bin/activate
 
-# Start frontend (new terminal)
-cd frontend && npm install && npm run dev
+# Use any skill via Claude Code
+claude "deploy PostgreSQL on Kubernetes"
+# → The postgres-k8s-setup skill handles everything autonomously
 ```
+
+## Cross-Platform Compatibility
+
+Skills work across multiple AI agents:
+
+| Agent | Skill Format | Status |
+|-------|-------------|--------|
+| Claude Code | `.claude/skills/<name>/SKILL.md` | Supported |
+| OpenAI Codex | `.claude/skills/<name>/SKILL.md` | Compatible |
+| Goose | `recipe.yaml` | Compatible |
