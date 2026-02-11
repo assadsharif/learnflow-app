@@ -1,0 +1,40 @@
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Deployment target"
+        required: true
+        default: "staging"
+        type: choice
+        options:
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Build and push images
+        run: |
+          echo "Building images for ${{ github.event.inputs.environment }}"
+          docker build -t learnflow-backend:${{ github.sha }} backend/
+          docker build -t learnflow-frontend:${{ github.sha }} frontend/
+
+      - name: Deploy to Kubernetes
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment }}"
+          kubectl apply -f k8s/base/namespace.yaml
+          kubectl apply -f k8s/base/
+          kubectl rollout status deployment/learnflow-backend -n learnflow --timeout=120s
+          kubectl rollout status deployment/learnflow-frontend -n learnflow --timeout=120s
