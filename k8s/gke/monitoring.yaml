@@ -1,0 +1,56 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: learnflow-backend-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - learnflow
+  selector:
+    matchLabels:
+      app: learnflow-backend
+  endpoints:
+    - port: http
+      path: /api/v1/health
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: learnflow-frontend-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - learnflow
+  selector:
+    matchLabels:
+      app: learnflow-frontend
+  endpoints:
+    - port: http
+      path: /
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kong-monitor
+  namespace: monitoring
+  labels:
+    release: prometheus
+spec:
+  namespaceSelector:
+    matchNames:
+      - kong
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: kong
+  endpoints:
+    - port: status
+      path: /metrics
+      interval: 15s
