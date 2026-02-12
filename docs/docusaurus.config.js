@@ -3,7 +3,7 @@ const config = {
   title: 'Reusable Intelligence & Cloud-Native Mastery',
   tagline: 'Portable AI agent skills with MCP Code Execution pattern',
   url: 'https://learnflow.dev',
-  baseUrl: '/',
+  baseUrl: '/docs/',
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
   favicon: 'img/favicon.ico',
