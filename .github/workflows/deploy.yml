@@ -1,40 +1,198 @@
-name: Deploy
+name: CD - Build & Push to GKE
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "docs/**"
+      - "k8s/**"
   workflow_dispatch:
     inputs:
-      environment:
-        description: "Deployment target"
+      component:
+        description: "Component to deploy"
         required: true
-        default: "staging"
+        default: "all"
         type: choice
         options:
-          - staging
-          - production
+          - all
+          - backend
+          - frontend
+          - docs
+
+env:
+  PROJECT_ID: gen-lang-client-0174245278
+  REGION: us-central1
+  REGISTRY: us-central1-docker.pkg.dev/gen-lang-client-0174245278/learnflow
+  GKE_CLUSTER: todo-chatbot
+  GKE_ZONE: us-central1-a
 
 jobs:
-  deploy:
+  detect-changes:
     runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
+    outputs:
+      backend: ${{ steps.filter.outputs.backend }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      docs: ${{ steps.filter.outputs.docs }}
+      k8s: ${{ steps.filter.outputs.k8s }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            frontend:
+              - 'frontend/**'
+            docs:
+              - 'docs/**'
+            k8s:
+              - 'k8s/**'
+
+  build-backend:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.backend == 'true' ||
+      github.event.inputs.component == 'backend' ||
+      github.event.inputs.component == 'all'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up kubectl
-        uses: azure/setup-kubectl@v4
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v4
+      - uses: google-github-actions/setup-gcloud@v2
 
-      - name: Build and push images
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push backend
         run: |
-          echo "Building images for ${{ github.event.inputs.environment }}"
-          docker build -t learnflow-backend:${{ github.sha }} backend/
-          docker build -t learnflow-frontend:${{ github.sha }} frontend/
+          docker build -t ${{ env.REGISTRY }}/backend:${{ github.sha }} \
+                        -t ${{ env.REGISTRY }}/backend:latest \
+                        backend/
+          docker push ${{ env.REGISTRY }}/backend:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/backend:latest
 
-      - name: Deploy to Kubernetes
+  build-frontend:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.frontend == 'true' ||
+      github.event.inputs.component == 'frontend' ||
+      github.event.inputs.component == 'all'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push frontend
         run: |
-          echo "Deploying to ${{ github.event.inputs.environment }}"
-          kubectl apply -f k8s/base/namespace.yaml
-          kubectl apply -f k8s/base/
-          kubectl rollout status deployment/learnflow-backend -n learnflow --timeout=120s
-          kubectl rollout status deployment/learnflow-frontend -n learnflow --timeout=120s
+          docker build -t ${{ env.REGISTRY }}/frontend:${{ github.sha }} \
+                        -t ${{ env.REGISTRY }}/frontend:latest \
+                        frontend/
+          docker push ${{ env.REGISTRY }}/frontend:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/frontend:latest
+
+  build-docs:
+    needs: detect-changes
+    if: |
+      needs.detect-changes.outputs.docs == 'true' ||
+      github.event.inputs.component == 'docs' ||
+      github.event.inputs.component == 'all'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev --quiet
+
+      - name: Build and push docs
+        run: |
+          docker build -t ${{ env.REGISTRY }}/docs:${{ github.sha }} \
+                        -t ${{ env.REGISTRY }}/docs:latest \
+                        docs/
+          docker push ${{ env.REGISTRY }}/docs:${{ github.sha }}
+          docker push ${{ env.REGISTRY }}/docs:latest
+
+  update-manifests:
+    needs: [build-backend, build-frontend, build-docs]
+    if: always() && !cancelled() && (needs.build-backend.result == 'success' || needs.build-frontend.result == 'success' || needs.build-docs.result == 'success')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update image tags in GKE manifests
+        run: |
+          SHA=${{ github.sha }}
+          SHORT_SHA=${SHA:0:7}
+
+          if [ "${{ needs.build-backend.result }}" == "success" ]; then
+            sed -i "s|image: ${{ env.REGISTRY }}/backend:.*|image: ${{ env.REGISTRY }}/backend:${SHA}|" k8s/gke/backend-deployment.yaml
+          fi
+
+          if [ "${{ needs.build-frontend.result }}" == "success" ]; then
+            sed -i "s|image: ${{ env.REGISTRY }}/frontend:.*|image: ${{ env.REGISTRY }}/frontend:${SHA}|" k8s/gke/frontend-deployment.yaml
+          fi
+
+          if [ "${{ needs.build-docs.result }}" == "success" ]; then
+            sed -i "s|image: ${{ env.REGISTRY }}/docs:.*|image: ${{ env.REGISTRY }}/docs:${SHA}|" k8s/gke/docs-deployment.yaml
+          fi
+
+      - name: Commit manifest updates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add k8s/gke/
+          git diff --staged --quiet || git commit -m "ci: update image tags to ${{ github.sha }}"
+          git push
+
+  notify:
+    needs: [build-backend, build-frontend, build-docs, update-manifests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment summary
+        run: |
+          echo "## CD Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Backend | ${{ needs.build-backend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Frontend | ${{ needs.build-frontend.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Docs | ${{ needs.build-docs.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Manifests | ${{ needs.update-manifests.result || 'skipped' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Commit: \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
