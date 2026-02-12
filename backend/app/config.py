@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     # Kafka
     kafka_bootstrap_servers: str = "kafka-broker-0.kafka-broker-headless.kafka.svc.cluster.local:9092"
 
+    # Auth
+    better_auth_secret: str = "learnflow-dev-secret-change-in-production"
+    better_auth_url: str = "http://localhost:3000"
+
     class Config:
         env_file = ".env"
 

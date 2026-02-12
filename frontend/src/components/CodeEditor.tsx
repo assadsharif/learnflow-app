@@ -32,6 +32,7 @@ export default function CodeEditor({ sessionId }: { sessionId: string }) {
       const res = await fetch("/api/v1/review", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ code, session_id: sessionId, language: "python" }),
       });
       const data = await res.json();

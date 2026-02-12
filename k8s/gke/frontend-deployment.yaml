@@ -24,6 +24,16 @@ spec:
           env:
             - name: NEXT_PUBLIC_API_URL
               value: "http://learnflow-backend.learnflow.svc.cluster.local:8000"
+            - name: BETTER_AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: learnflow-secrets
+                  key: better-auth-secret
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: learnflow-secrets
+                  key: database-url
           resources:
             requests:
               cpu: 100m

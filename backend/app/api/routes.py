@@ -1,10 +1,11 @@
 """API routes for LearnFlow."""
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from ..models.schemas import (
     ChatRequest, ChatResponse, CodeSubmission, CodeReviewResult,
     HealthResponse, AgentType,
 )
 from ..agents.orchestrator import run_agent_pipeline
+from ..auth import get_current_user
 from datetime import datetime
 
 router = APIRouter()
@@ -20,12 +21,12 @@ async def health_check():
 
 
 @router.post("/chat", response_model=ChatResponse)
-async def chat(request: ChatRequest):
-    """Send a message through the agent pipeline."""
+async def chat(request: ChatRequest, user: dict = Depends(get_current_user)):
+    """Send a message through the agent pipeline. Requires authentication."""
     try:
         result = await run_agent_pipeline(
             message=request.message,
-            session_id=request.session_id,
+            session_id=user.get("id", request.session_id),
             context=request.context,
         )
         return ChatResponse(
@@ -39,12 +40,12 @@ async def chat(request: ChatRequest):
 
 
 @router.post("/review", response_model=CodeReviewResult)
-async def review_code(submission: CodeSubmission):
-    """Submit code for review by the Code Review Agent."""
+async def review_code(submission: CodeSubmission, user: dict = Depends(get_current_user)):
+    """Submit code for review by the Code Review Agent. Requires authentication."""
     try:
         result = await run_agent_pipeline(
             message=f"Please review this Python code:\n```python\n{submission.code}\n```",
-            session_id=submission.session_id,
+            session_id=user.get("id", submission.session_id),
             context={"type": "code_review", "language": submission.language},
         )
         return CodeReviewResult(

@@ -58,6 +58,7 @@ export default function ChatPanel({ sessionId }: { sessionId: string }) {
       const res = await fetch("/api/v1/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ message: input, session_id: sessionId }),
       });
       const data = await res.json();
