@@ -6,10 +6,16 @@ metadata:
   annotations:
     konghq.com/strip-path: "false"
     konghq.com/plugins: rate-limiting,cors
+    cert-manager.io/cluster-issuer: learnflow-ca-issuer
 spec:
   ingressClassName: kong
+  tls:
+    - hosts:
+        - learnflow.34.45.115.115.nip.io
+      secretName: learnflow-tls
   rules:
-    - http:
+    - host: learnflow.34.45.115.115.nip.io
+      http:
         paths:
           - path: /
             pathType: Prefix
@@ -34,10 +40,16 @@ metadata:
   annotations:
     konghq.com/strip-path: "true"
     konghq.com/plugins: rate-limiting,cors
+    cert-manager.io/cluster-issuer: learnflow-ca-issuer
 spec:
   ingressClassName: kong
+  tls:
+    - hosts:
+        - learnflow.34.45.115.115.nip.io
+      secretName: learnflow-tls
   rules:
-    - http:
+    - host: learnflow.34.45.115.115.nip.io
+      http:
         paths:
           - path: /docs
             pathType: Prefix
